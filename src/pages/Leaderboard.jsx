@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
 import api from '../lib/api'
+import { fallbackLeaderboard } from '../data/fallbackContent'
 
 const Leaderboard = () => {
   const { user } = useAuth()
@@ -12,9 +13,11 @@ const Leaderboard = () => {
     const loadBoard = async () => {
       try {
         const response = await api.get('/leaderboard')
-        setBoard(response.data)
+        const nextBoard = Array.isArray(response.data) && response.data.length ? response.data : fallbackLeaderboard
+        setBoard(nextBoard)
       } catch (error) {
         console.error('Leaderboard loading failed:', error)
+        setBoard(fallbackLeaderboard)
       } finally {
         setLoading(false)
       }

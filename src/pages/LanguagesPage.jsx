@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import api from '../lib/api'
+import { getFallbackCoursesByCategory } from '../data/fallbackContent'
 
 const LanguagesPage = () => {
   const [courses, setCourses] = useState([])
@@ -12,9 +13,14 @@ const LanguagesPage = () => {
       try {
         setLoading(true)
         const response = await api.get('/courses', { params: { category: 'language' } })
-        setCourses(Array.isArray(response.data) ? response.data : [])
+        const nextCourses =
+          Array.isArray(response.data) && response.data.length
+            ? response.data
+            : getFallbackCoursesByCategory('language')
+        setCourses(nextCourses)
       } catch (error) {
         console.error('Failed to load language courses:', error)
+        setCourses(getFallbackCoursesByCategory('language'))
       } finally {
         setLoading(false)
       }

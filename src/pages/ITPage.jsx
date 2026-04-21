@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import Lesson from '../components/Lesson'
 import api from '../lib/api'
+import { getFallbackCoursesByCategory } from '../data/fallbackContent'
 
 const ITPage = () => {
   const [selectedDirection, setSelectedDirection] = useState(null)
@@ -15,7 +16,10 @@ const ITPage = () => {
       try {
         setLoading(true)
         const response = await api.get('/courses', { params: { category: 'it' } })
-        const dbCourses = Array.isArray(response.data) ? response.data : []
+        const dbCourses =
+          Array.isArray(response.data) && response.data.length
+            ? response.data
+            : getFallbackCoursesByCategory('it')
 
         setDirections(
           dbCourses.map((course) => ({
@@ -48,6 +52,37 @@ const ITPage = () => {
         )
       } catch (error) {
         console.error('Failed to load IT courses:', error)
+        const dbCourses = getFallbackCoursesByCategory('it')
+
+        setDirections(
+          dbCourses.map((course) => ({
+            id: course.courseKey,
+            title: course.title,
+            icon: course.icon || '📚',
+            description: course.description,
+            roadmap: course.roadmap || [],
+            technologies: course.technologies || [],
+          }))
+        )
+
+        setCourseLessons(
+          dbCourses.reduce((acc, course) => {
+            acc[course.courseKey] = (course.lessons || []).map((lesson, index) => ({
+              id: lesson.lessonId || `lesson-${index + 1}`,
+              title: lesson.title,
+              description: lesson.description,
+              explanation: lesson.content || lesson.description || '',
+              example: lesson.example,
+              task: {
+                type: lesson.task?.type || 'input',
+                question: lesson.task?.question || '',
+                answer: lesson.task?.answer || '',
+                options: lesson.task?.options || [],
+              },
+            }))
+            return acc
+          }, {})
+        )
       } finally {
         setLoading(false)
       }

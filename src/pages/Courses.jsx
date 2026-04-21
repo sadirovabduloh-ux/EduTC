@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import api from '../lib/api'
+import { fallbackCourses } from '../data/fallbackContent'
 
 const Courses = () => {
   const [courses, setCourses] = useState([])
@@ -12,9 +13,11 @@ const Courses = () => {
       try {
         setLoading(true)
         const response = await api.get('/courses')
-        setCourses(Array.isArray(response.data) ? response.data : [])
+        const nextCourses = Array.isArray(response.data) && response.data.length ? response.data : fallbackCourses
+        setCourses(nextCourses)
       } catch (error) {
         console.error('Failed to load courses:', error)
+        setCourses(fallbackCourses)
       } finally {
         setLoading(false)
       }
