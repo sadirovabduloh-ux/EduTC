@@ -18,7 +18,7 @@ const SkillNode = ({ lesson, isCompleted, isLocked, isCurrent, onClick, position
     <motion.div
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      transition={{ delay: position * 0.1 }}
+      transition={{ delay: position.index * 0.1 }}
       className={`absolute w-16 h-16 rounded-full border-4 flex items-center justify-center text-white font-bold cursor-pointer transition-all duration-300 ${
         isLocked ? 'cursor-not-allowed' : 'hover:scale-110'
       } ${getNodeColor()}`}

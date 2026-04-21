@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import axios from 'axios'
+import api from '../lib/api'
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -24,7 +24,7 @@ const Contact = () => {
     setSubmitMessage('')
 
     try {
-      const response = await axios.post('/api/contact', formData)
+      await api.post('/contact', formData)
       setSubmitMessage('Спасибо за ваше сообщение! Мы свяжемся с вами в ближайшее время.')
       setFormData({ name: '', email: '', message: '' })
     } catch (error) {
@@ -55,7 +55,7 @@ const Contact = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           onSubmit={handleSubmit}
-          className="card space-y-6"
+          className="card space-y-6 px-5 sm:px-6"
         >
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

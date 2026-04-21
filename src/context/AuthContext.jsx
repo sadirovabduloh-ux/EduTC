@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import axios from 'axios'
+import api, { API_BASE_URL, setApiToken } from '../lib/api'
 
 const AuthContext = createContext()
 
@@ -16,19 +16,42 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
   const [token, setToken] = useState(localStorage.getItem('token'))
 
-  // Настройка axios
-  axios.defaults.baseURL = 'http://localhost:5002/api'
-  if (token) {
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+  const normalizeUser = (rawUser) => {
+    if (!rawUser) return null
+
+    return {
+      ...rawUser,
+      id: rawUser.id || rawUser._id,
+      _id: rawUser._id || rawUser.id,
+    }
   }
+
+  const applyAuth = (nextToken, nextUser = null) => {
+    setToken(nextToken)
+    setApiToken(nextToken)
+
+    if (nextToken) {
+      localStorage.setItem('token', nextToken)
+    } else {
+      localStorage.removeItem('token')
+    }
+
+    if (nextUser) {
+      setUser(normalizeUser(nextUser))
+    }
+  }
+
+  useEffect(() => {
+    setApiToken(token)
+  }, [token])
 
   // Загрузка профиля при монтировании
   useEffect(() => {
     const loadUser = async () => {
       if (token) {
         try {
-          const response = await axios.get('/auth/profile')
-          setUser(response.data)
+          const response = await api.get('/auth/profile')
+          setUser(normalizeUser(response.data))
         } catch (error) {
           console.error('Failed to load user:', error)
           logout()
@@ -42,13 +65,10 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await axios.post('/auth/login', { email, password })
+      const response = await api.post('/auth/login', { email, password })
       const { user, token } = response.data
 
-      setUser(user)
-      setToken(token)
-      localStorage.setItem('token', token)
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      applyAuth(token, user)
 
       return { success: true }
     } catch (error) {
@@ -58,13 +78,10 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (name, email, password) => {
     try {
-      const response = await axios.post('/auth/register', { name, email, password })
+      const response = await api.post('/auth/register', { name, email, password })
       const { user, token } = response.data
 
-      setUser(user)
-      setToken(token)
-      localStorage.setItem('token', token)
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      applyAuth(token, user)
 
       return { success: true }
     } catch (error) {
@@ -73,21 +90,35 @@ export const AuthProvider = ({ children }) => {
   }
 
   const loginWithGoogle = () => {
-    window.location.href = 'http://localhost:5002/api/auth/google'
+    window.location.href = `${API_BASE_URL}/auth/google`
+  }
+
+  const loginWithApple = () => {
+    window.location.href = `${API_BASE_URL}/auth/apple`
+  }
+
+  const loginWithToken = async (nextToken) => {
+    try {
+      applyAuth(nextToken)
+      const response = await api.get('/auth/profile')
+      setUser(normalizeUser(response.data))
+      return { success: true }
+    } catch (error) {
+      applyAuth(null)
+      return { success: false, error: 'Не удалось восстановить сессию' }
+    }
   }
 
   const logout = () => {
     setUser(null)
-    setToken(null)
-    localStorage.removeItem('token')
-    delete axios.defaults.headers.common['Authorization']
+    applyAuth(null)
   }
 
   const updateScore = async (action) => {
     try {
-      const response = await axios.patch('/score', { action })
+      const response = await api.patch('/score', { action })
       if (response.data) {
-        setUser(response.data)
+        setUser(normalizeUser(response.data))
       }
       return response.data
     } catch (error) {
@@ -103,9 +134,12 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     loginWithGoogle,
+    loginWithApple,
+    loginWithToken,
     logout,
     updateScore,
-    isAdmin: user?.role === 'admin'
+    isAdmin: user?.role === 'admin',
+    isMentor: user?.role === 'mentor'
   }
 
   return (

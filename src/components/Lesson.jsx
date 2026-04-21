@@ -28,10 +28,10 @@ const Lesson = ({ lessons, onComplete }) => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="mx-auto max-w-4xl">
       {/* Progress Bar */}
       <div className="mb-8">
-        <div className="flex justify-between text-sm text-gray-600 dark:text-gray-300 mb-2">
+        <div className="mb-2 flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-300 sm:flex-row sm:justify-between">
           <span>Урок {currentLesson + 1} из {lessons.length}</span>
           <span>{Math.round(progress)}% завершено</span>
         </div>
@@ -49,15 +49,15 @@ const Lesson = ({ lessons, onComplete }) => {
         key={currentLesson}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="card"
+        className="card px-4 py-5 sm:px-6 sm:py-6"
       >
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
+        <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">
           {lesson.title}
         </h2>
 
         <div className="space-y-6">
           <div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+            <h3 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white sm:text-xl">
               Объяснение
             </h3>
             <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
@@ -66,18 +66,18 @@ const Lesson = ({ lessons, onComplete }) => {
           </div>
 
           <div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+            <h3 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white sm:text-xl">
               Пример
             </h3>
-            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-              <p className="text-gray-900 dark:text-white font-mono">
+            <div className="overflow-x-auto rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+              <p className="font-mono text-sm text-gray-900 dark:text-white sm:text-base">
                 {lesson.example}
               </p>
             </div>
           </div>
 
           <div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+            <h3 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white sm:text-xl">
               Задание
             </h3>
             <p className="text-gray-600 dark:text-gray-300 mb-4">
@@ -96,7 +96,7 @@ const Lesson = ({ lessons, onComplete }) => {
                 <button
                   onClick={handleSubmit}
                   disabled={!userAnswer.trim()}
-                  className="btn btn-primary"
+                  className="btn btn-primary w-full sm:w-auto"
                 >
                   Проверить
                 </button>
@@ -139,7 +139,7 @@ const Lesson = ({ lessons, onComplete }) => {
 
         {showFeedback && (
           <div className="mt-8 flex justify-end">
-            <button onClick={nextLesson} className="btn btn-primary">
+            <button onClick={nextLesson} className="btn btn-primary w-full sm:w-auto">
               {currentLesson < lessons.length - 1 ? 'Следующий урок' : 'Завершить обучение'}
             </button>
           </div>

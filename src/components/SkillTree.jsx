@@ -5,6 +5,7 @@ import SkillNode from './SkillNode'
 import LessonPage from './LessonPage'
 
 const SkillTree = ({ direction, lessons, onBack }) => {
+  const safeLessons = Array.isArray(lessons) ? lessons : []
   const [progress, setProgress] = useState({})
   const [currentLesson, setCurrentLesson] = useState(null)
   const [completedLessons, setCompletedLessons] = useState(new Set())
@@ -55,14 +56,14 @@ const SkillTree = ({ direction, lessons, onBack }) => {
 
   const isLessonLocked = (index) => {
     if (index === 0) return false
-    return !completedLessons.has(lessons[index - 1].id)
+    return !completedLessons.has(safeLessons[index - 1].id)
   }
 
   const isLessonCompleted = (lessonId) => completedLessons.has(lessonId)
   const isLessonCurrent = (index) => {
     if (completedLessons.size === 0) return index === 0
-    const lastCompletedIndex = lessons.findIndex(l => !completedLessons.has(l.id))
-    return index === (lastCompletedIndex === -1 ? lessons.length - 1 : lastCompletedIndex)
+    const lastCompletedIndex = safeLessons.findIndex((lesson) => !completedLessons.has(lesson.id))
+    return index === (lastCompletedIndex === -1 ? safeLessons.length - 1 : lastCompletedIndex)
   }
 
   if (currentLesson) {
@@ -75,14 +76,30 @@ const SkillTree = ({ direction, lessons, onBack }) => {
     )
   }
 
+  if (safeLessons.length === 0) {
+    return (
+      <div className="card text-center">
+        <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+          Уроки скоро появятся
+        </h3>
+        <p className="text-gray-600 dark:text-gray-300 mb-6">
+          Для этого направления пока нет доступных уроков. Выберите другое направление или вернитесь позже.
+        </p>
+        <button onClick={onBack} className="btn btn-primary">
+          Назад к направлениям
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div className="relative">
       {/* Фон с линиями */}
-      <svg className="absolute inset-0 w-full h-full" style={{ height: lessons.length * 120 + 200 }}>
-        {lessons.map((_, index) => {
+      <svg className="absolute inset-0 w-full h-full" style={{ height: safeLessons.length * 120 + 200 }}>
+        {safeLessons.map((_, index) => {
           if (index === 0) return null
-          const prevPos = getNodePosition(index - 1, lessons.length)
-          const currPos = getNodePosition(index, lessons.length)
+          const prevPos = getNodePosition(index - 1, safeLessons.length)
+          const currPos = getNodePosition(index, safeLessons.length)
 
           return (
             <motion.line
@@ -91,10 +108,10 @@ const SkillTree = ({ direction, lessons, onBack }) => {
               y1={prevPos.y}
               x2={currPos.x}
               y2={currPos.y}
-              stroke={isLessonCompleted(lessons[index].id) ? '#10B981' : '#6B7280'}
+              stroke={isLessonCompleted(safeLessons[index].id) ? '#10B981' : '#6B7280'}
               strokeWidth="3"
               initial={{ pathLength: 0 }}
-              animate={{ pathLength: isLessonCompleted(lessons[index].id) ? 1 : 0 }}
+              animate={{ pathLength: isLessonCompleted(safeLessons[index].id) ? 1 : 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
             />
           )
@@ -102,21 +119,21 @@ const SkillTree = ({ direction, lessons, onBack }) => {
       </svg>
 
       {/* Узлы */}
-      {lessons.map((lesson, index) => (
+      {safeLessons.map((lesson, index) => (
         <SkillNode
           key={lesson.id}
           lesson={lesson}
           isCompleted={isLessonCompleted(lesson.id)}
           isLocked={isLessonLocked(index)}
           isCurrent={isLessonCurrent(index)}
-          position={getNodePosition(index, lessons.length)}
+          position={getNodePosition(index, safeLessons.length)}
           onClick={() => !isLessonLocked(index) && setCurrentLesson(lesson)}
         />
       ))}
 
       {/* Информация о уроках */}
       <div className="mt-8 space-y-4">
-        {lessons.map((lesson, index) => (
+        {safeLessons.map((lesson, index) => (
           <motion.div
             key={lesson.id}
             initial={{ opacity: 0, x: -50 }}
@@ -167,12 +184,12 @@ const SkillTree = ({ direction, lessons, onBack }) => {
           <motion.div
             className="bg-primary-500 h-4 rounded-full"
             initial={{ width: 0 }}
-            animate={{ width: `${(completedLessons.size / lessons.length) * 100}%` }}
+            animate={{ width: `${(completedLessons.size / safeLessons.length) * 100}%` }}
             transition={{ duration: 1 }}
           />
         </div>
         <p className="text-sm text-gray-600 dark:text-gray-300">
-          {completedLessons.size} из {lessons.length} уроков пройдено
+          {completedLessons.size} из {safeLessons.length} уроков пройдено
         </p>
       </motion.div>
     </div>

@@ -47,15 +47,15 @@ const Quiz = ({ questions, onComplete, onStartLesson }) => {
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="card max-w-2xl mx-auto text-center"
+        className="card mx-auto max-w-2xl text-center"
       >
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+        <h2 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">
           Результаты теста
         </h2>
-        <p className="text-xl text-gray-600 dark:text-gray-300 mb-2">
+        <p className="mb-2 text-lg text-gray-600 dark:text-gray-300 sm:text-xl">
           Ваш уровень: <span className="font-bold text-primary-600">{level}</span>
         </p>
-        <p className="text-lg text-gray-600 dark:text-gray-300 mb-6">
+        <p className="mb-6 text-base text-gray-600 dark:text-gray-300 sm:text-lg">
           Правильных ответов: {score} из {questions.length}
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -79,10 +79,10 @@ const Quiz = ({ questions, onComplete, onStartLesson }) => {
       initial={{ opacity: 0, x: 50 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -50 }}
-      className="card max-w-2xl mx-auto"
+      className="card mx-auto max-w-2xl px-4 py-5 sm:px-6 sm:py-6"
     >
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+        <h2 className="mb-2 text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
           Проверка знаний
         </h2>
         <p className="text-gray-600 dark:text-gray-300">
@@ -91,7 +91,7 @@ const Quiz = ({ questions, onComplete, onStartLesson }) => {
       </div>
 
       <div className="mb-8">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+        <h3 className="mb-6 text-lg font-semibold text-gray-900 dark:text-white sm:text-xl">
           {questions[currentQuestion].question}
         </h3>
         <div className="space-y-3">

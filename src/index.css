@@ -3,33 +3,270 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --ios-bg-top: #eef1f5;
+    --ios-bg-bottom: #dde3ea;
+    --ios-card: rgba(255, 255, 255, 0.78);
+    --ios-card-border: rgba(255, 255, 255, 0.72);
+    --ios-shadow: 0 22px 54px rgba(15, 23, 42, 0.08);
+    --ios-shadow-soft: 0 12px 28px rgba(15, 23, 42, 0.06);
+    --ios-text: #111827;
+    --ios-subtext: #667085;
+    --ios-blue: #0a84ff;
+    --ios-blue-deep: #0066cc;
+  }
+
   html {
     scroll-behavior: smooth;
+    min-height: 100%;
+    background:
+      radial-gradient(circle at top left, rgba(10, 132, 255, 0.08), transparent 28%),
+      radial-gradient(circle at top right, rgba(148, 163, 184, 0.14), transparent 24%),
+      radial-gradient(circle at bottom center, rgba(255, 255, 255, 0.28), transparent 32%),
+      linear-gradient(180deg, var(--ios-bg-top) 0%, var(--ios-bg-bottom) 100%);
+  }
+
+  html.dark {
+    --ios-card: rgba(23, 28, 39, 0.7);
+    --ios-card-border: rgba(255, 255, 255, 0.08);
+    --ios-shadow: 0 28px 58px rgba(0, 0, 0, 0.4);
+    --ios-shadow-soft: 0 14px 32px rgba(0, 0, 0, 0.28);
+    --ios-text: #f3f4f6;
+    --ios-subtext: #a1aab8;
+    background:
+      radial-gradient(circle at top left, rgba(10, 132, 255, 0.14), transparent 28%),
+      radial-gradient(circle at top right, rgba(56, 189, 248, 0.16), transparent 24%),
+      linear-gradient(180deg, #090c14 0%, #101826 100%);
   }
 
   body {
-    @apply font-inter antialiased;
+    @apply m-0 min-h-screen antialiased text-gray-900 dark:text-white;
+    font-family: "SF Pro Display", "SF Pro Text", "Inter", "Segoe UI", sans-serif;
+    background: transparent;
+    color: var(--ios-text);
+    overflow-x: hidden;
+  }
+
+  #root {
+    @apply min-h-screen;
+    overflow-x: hidden;
+  }
+
+  * {
+    box-sizing: border-box;
   }
 }
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center px-6 py-3 font-medium rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+    @apply inline-flex items-center justify-center px-5 py-3 font-semibold rounded-[20px] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2;
+    min-height: 52px;
   }
 
   .btn-primary {
-    @apply bg-gradient-to-r from-primary-500 to-accent-500 text-white shadow-lg hover:shadow-xl hover:scale-105;
+    background: linear-gradient(180deg, #3aa0ff 0%, var(--ios-blue) 55%, var(--ios-blue-deep) 100%);
+    color: white;
+    box-shadow: 0 14px 28px rgba(10, 132, 255, 0.28);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 18px 34px rgba(10, 132, 255, 0.32);
   }
 
   .btn-secondary {
-    @apply bg-white/10 backdrop-blur-sm border border-white/20 text-gray-900 dark:text-white hover:bg-white/20;
+    background: rgba(255, 255, 255, 0.52);
+    color: var(--ios-text);
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(22px);
+    box-shadow: var(--ios-shadow-soft);
+  }
+
+  .dark .btn-secondary {
+    background: rgba(24, 31, 44, 0.78);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .btn-secondary:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.7);
   }
 
   .glass {
-    @apply bg-white/10 backdrop-blur-md border border-white/20;
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(26px);
+    box-shadow: var(--ios-shadow-soft);
+  }
+
+  .dark .glass {
+    background: rgba(18, 24, 35, 0.72);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .ios-mirror-bar {
+    position: relative;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.44) 0%, rgba(247, 250, 255, 0.12) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.34),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.08),
+      0 12px 26px rgba(15, 23, 42, 0.055);
+    backdrop-filter: blur(16px) saturate(116%);
+  }
+
+  .ios-mirror-bar::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+      linear-gradient(125deg, rgba(255, 255, 255, 0.18), transparent 38%, transparent 62%, rgba(255, 255, 255, 0.08)),
+      radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.22), transparent 28%);
+    pointer-events: none;
+    opacity: 0.34;
+  }
+
+  .dark .ios-mirror-bar {
+    background:
+      linear-gradient(180deg, rgba(24, 31, 43, 0.86) 0%, rgba(16, 21, 31, 0.72) 100%);
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.04),
+      0 16px 34px rgba(0, 0, 0, 0.28);
+  }
+
+  .ios-nav-pill {
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.24),
+      0 6px 14px rgba(15, 23, 42, 0.04);
+    backdrop-filter: blur(12px) saturate(108%);
+  }
+
+  .dark .ios-nav-pill {
+    background: rgba(22, 28, 40, 0.62);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .ios-nav-link {
+    position: relative;
+    overflow: hidden;
+    z-index: 0;
+    transition: color 0.28s ease;
+  }
+
+  .ios-nav-link::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.22), transparent 55%);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+  }
+
+  .ios-nav-link:hover::before {
+    opacity: 0.22;
+  }
+
+  .ios-nav-link-active {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.46);
+    box-shadow:
+      0 6px 14px rgba(15, 23, 42, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.38);
+  }
+
+  .dark .ios-nav-link-active {
+    background: rgba(40, 50, 68, 0.88);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow:
+      0 8px 18px rgba(0, 0, 0, 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .ios-nav-icon,
+  .ios-nav-user {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .ios-nav-icon:hover,
+  .ios-nav-user:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .dark .ios-nav-icon,
+  .dark .ios-nav-user {
+    background: rgba(22, 28, 40, 0.54);
+  }
+
+  .dark .ios-nav-icon:hover,
+  .dark .ios-nav-user:hover {
+    background: rgba(28, 35, 49, 0.72);
   }
 
   .card {
-    @apply bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 shadow-xl;
+    background: var(--ios-card);
+    border: 1px solid var(--ios-card-border);
+    border-radius: 28px;
+    padding: 1.5rem;
+    backdrop-filter: blur(26px);
+    box-shadow: var(--ios-shadow);
+  }
+
+  .ios-section-shell {
+    background: rgba(255, 255, 255, 0.44);
+    border: 1px solid rgba(255, 255, 255, 0.82);
+    border-radius: 32px;
+    backdrop-filter: blur(28px);
+    box-shadow: var(--ios-shadow);
+  }
+
+  .dark .ios-section-shell {
+    background: rgba(17, 23, 34, 0.62);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .ios-chip {
+    @apply inline-flex items-center rounded-full px-4 py-2 text-sm font-medium;
+    background: rgba(255, 255, 255, 0.72);
+    color: var(--ios-text);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: var(--ios-shadow-soft);
+  }
+
+  .dark .ios-chip {
+    background: rgba(24, 31, 44, 0.78);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .ios-orb-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 34px;
+    background:
+      radial-gradient(circle at top right, rgba(255, 255, 255, 0.9), transparent 28%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.78) 0%, rgba(255, 255, 255, 0.46) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.78);
+    box-shadow: 0 24px 54px rgba(15, 23, 42, 0.1);
+    backdrop-filter: blur(26px);
+  }
+
+  .dark .ios-orb-card {
+    background:
+      radial-gradient(circle at top right, rgba(255, 255, 255, 0.08), transparent 28%),
+      linear-gradient(180deg, rgba(24, 31, 44, 0.82) 0%, rgba(18, 24, 35, 0.62) 100%);
+    border-color: rgba(255, 255, 255, 0.08);
   }
 }

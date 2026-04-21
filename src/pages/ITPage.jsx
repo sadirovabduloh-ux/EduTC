@@ -1,98 +1,114 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import SkillTree from '../components/SkillTree'
-import { itLessons } from '../data/itLessons'
-
-const itDirections = [
-  {
-    id: 'frontend',
-    title: 'Frontend',
-    icon: '💻',
-    description: 'Создание пользовательских интерфейсов',
-    roadmap: [
-      'HTML & CSS Basics',
-      'JavaScript Fundamentals',
-      'React.js',
-      'State Management (Redux/Zustand)',
-      'CSS Frameworks (Tailwind)',
-      'Build Tools (Vite/Webpack)',
-      'Testing (Jest/React Testing Library)',
-      'Performance Optimization'
-    ],
-    technologies: ['HTML5', 'CSS3', 'JavaScript', 'TypeScript', 'React', 'Next.js', 'Tailwind CSS', 'Sass']
-  },
-  {
-    id: 'backend',
-    title: 'Backend',
-    icon: '⚙️',
-    description: 'Серверная разработка и API',
-    roadmap: [
-      'Programming Fundamentals',
-      'Database Design',
-      'RESTful APIs',
-      'Authentication & Security',
-      'Node.js & Express',
-      'Database Management',
-      'Caching & Performance',
-      'Deployment & DevOps'
-    ],
-    technologies: ['Node.js', 'Express.js', 'MongoDB', 'PostgreSQL', 'Redis', 'Docker', 'AWS', 'GraphQL']
-  },
-  {
-    id: 'database',
-    title: 'Database',
-    icon: '🗄️',
-    description: 'Проектирование и управление базами данных',
-    roadmap: [
-      'SQL Fundamentals',
-      'Database Design',
-      'Normalization',
-      'Indexing & Optimization',
-      'NoSQL Databases',
-      'Data Modeling',
-      'Backup & Recovery',
-      'Security & Permissions'
-    ],
-    technologies: ['MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'SQLite', 'Oracle', 'Firebase', 'Prisma']
-  }
-]
+import Lesson from '../components/Lesson'
+import api from '../lib/api'
 
 const ITPage = () => {
   const [selectedDirection, setSelectedDirection] = useState(null)
+  const [directions, setDirections] = useState([])
+  const [courseLessons, setCourseLessons] = useState({})
+  const [loading, setLoading] = useState(true)
+  const [mode, setMode] = useState('select')
+
+  useEffect(() => {
+    const loadCourses = async () => {
+      try {
+        setLoading(true)
+        const response = await api.get('/courses', { params: { category: 'it' } })
+        const dbCourses = Array.isArray(response.data) ? response.data : []
+
+        setDirections(
+          dbCourses.map((course) => ({
+            id: course.courseKey,
+            title: course.title,
+            icon: course.icon || '📚',
+            description: course.description,
+            roadmap: course.roadmap || [],
+            technologies: course.technologies || [],
+          }))
+        )
+
+        setCourseLessons(
+          dbCourses.reduce((acc, course) => {
+            acc[course.courseKey] = (course.lessons || []).map((lesson, index) => ({
+              id: lesson.lessonId || `lesson-${index + 1}`,
+              title: lesson.title,
+              description: lesson.description,
+              explanation: lesson.content || lesson.description || '',
+              example: lesson.example,
+              task: {
+                type: lesson.task?.type || 'input',
+                question: lesson.task?.question || '',
+                answer: lesson.task?.answer || '',
+                options: lesson.task?.options || [],
+              },
+            }))
+            return acc
+          }, {})
+        )
+      } catch (error) {
+        console.error('Failed to load IT courses:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadCourses()
+  }, [])
+
+  const handleOpenDirection = (direction) => {
+    setSelectedDirection(direction)
+    setMode('lesson')
+  }
+
+  const handleBackToDirections = () => {
+    setSelectedDirection(null)
+    setMode('select')
+  }
+
+  const handleLessonComplete = () => {
+    setMode('select')
+    setSelectedDirection(null)
+  }
 
   return (
-    <section className="min-h-screen py-20 px-4 pt-32">
+    <section className="min-h-screen px-4 py-16 pt-28 sm:py-20 sm:pt-32">
       <div className="container mx-auto max-w-6xl">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-16"
+          className="mb-12 text-center sm:mb-16"
         >
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+          <h1 className="mb-4 text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl md:text-5xl">
             IT Направления
           </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+          <p className="mx-auto max-w-3xl text-base text-gray-600 dark:text-gray-300 sm:text-lg md:text-xl">
             Выберите специализацию и пройдите интерактивное обучение с системой skill tree
           </p>
         </motion.div>
 
-        {!selectedDirection ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {itDirections.map((direction, index) => (
+        {loading ? (
+          <div className="card text-center py-12">
+            <div className="text-xl text-gray-700 dark:text-gray-300">Загрузка направлений...</div>
+          </div>
+        ) : !selectedDirection ? (
+          directions.length ? (
+          <div className="grid grid-cols-1 gap-5 sm:gap-6 md:grid-cols-2 xl:grid-cols-3 md:gap-8">
+            {directions.map((direction, index) => (
               <motion.div
                 key={direction.id}
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 whileHover={{ y: -10 }}
-                className="card cursor-pointer group"
-                onClick={() => setSelectedDirection(direction)}
+                className="card group cursor-pointer"
+                onClick={() => handleOpenDirection(direction)}
               >
                 <div className="text-center">
-                  <div className="text-6xl mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <div className="mb-4 text-5xl transition-transform duration-300 group-hover:scale-110 sm:text-6xl">
                     {direction.icon}
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+                  <h3 className="mb-3 text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
                     {direction.title}
                   </h3>
                   <p className="text-gray-600 dark:text-gray-300 mb-6">
@@ -105,38 +121,47 @@ const ITPage = () => {
               </motion.div>
             ))}
           </div>
-        ) : (
+          ) : (
+            <div className="card text-center py-12">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+                IT направления пока не добавлены
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300">
+                Добавьте курсы Frontend, Backend или Database через админпанель, и они появятся здесь.
+              </p>
+            </div>
+          )
+        ) : mode === 'lesson' ? (
           <motion.div
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             className="space-y-8"
           >
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <button
-                onClick={() => setSelectedDirection(null)}
-                className="btn btn-secondary"
+                onClick={handleBackToDirections}
+                className="btn btn-secondary w-full sm:w-auto"
               >
                 ← Назад к направлениям
               </button>
-              <div className="text-4xl">{selectedDirection.icon}</div>
+              <div className="text-center text-4xl sm:text-right">{selectedDirection.icon}</div>
             </div>
 
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            <div className="mb-8 text-center">
+              <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl">
                 {selectedDirection.title}
               </h2>
-              <p className="text-lg text-gray-600 dark:text-gray-300">
+              <p className="text-base text-gray-600 dark:text-gray-300 sm:text-lg">
                 {selectedDirection.description}
               </p>
             </div>
 
-            <SkillTree
-              direction={selectedDirection.id}
-              lessons={itLessons[selectedDirection.id]}
-              onBack={() => setSelectedDirection(null)}
+            <Lesson
+              lessons={courseLessons[selectedDirection.id]}
+              onComplete={handleLessonComplete}
             />
           </motion.div>
-        )}
+        ) : null}
       </div>
     </section>
   )
