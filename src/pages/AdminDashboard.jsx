@@ -2,6 +2,14 @@ import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import api from '../lib/api'
 import { useAuth } from '../context/AuthContext'
+import {
+  buildLocalStats,
+  getLocalCourses,
+  getLocalUsers,
+  isLocalToken,
+  saveLocalCourses,
+  saveLocalUsers,
+} from '../lib/localData'
 
 const mentorScopeOptions = [
   { value: 'frontend', label: 'Frontend' },
@@ -134,7 +142,7 @@ const blankQuizItem = () => ({
 })
 
 const AdminDashboard = () => {
-  const { user, isAdmin, isMentor } = useAuth()
+  const { user, token, isAdmin, isMentor } = useAuth()
   const mentorScope = user?.mentorScope || ''
   const [activeTab, setActiveTab] = useState('courses')
   const [courses, setCourses] = useState([])
@@ -158,6 +166,11 @@ const AdminDashboard = () => {
     loadData()
   }, [isAdmin])
 
+  const getScopedCourses = (items) => {
+    if (isAdmin) return items
+    return items.filter((course) => course.courseKey === mentorScope)
+  }
+
   const loadData = async () => {
     try {
       setLoading(true)
@@ -173,6 +186,11 @@ const AdminDashboard = () => {
       setUsers(usersRes?.data || [])
     } catch (error) {
       console.error('Failed to load admin data:', error)
+      const localUsers = getLocalUsers().map(({ password, ...member }) => member)
+      const localCourses = getLocalCourses()
+      setCourses(getScopedCourses(localCourses))
+      setUsers(localUsers)
+      setStats(buildLocalStats(localUsers, localCourses, mentorScope))
     } finally {
       setLoading(false)
     }
@@ -195,6 +213,13 @@ const AdminDashboard = () => {
       setCourses((prev) => prev.filter((course) => course._id !== id))
     } catch (error) {
       console.error('Failed to delete course:', error)
+      if (!error.response || isLocalToken(token)) {
+        const nextCourses = getLocalCourses().filter((course) => course._id !== id)
+        saveLocalCourses(nextCourses)
+        setCourses(getScopedCourses(nextCourses))
+        setStats((prev) => ({ ...prev, totalCourses: nextCourses.length }))
+        return
+      }
       alert(error.response?.data?.error || 'Не удалось удалить курс')
     }
   }
@@ -207,6 +232,14 @@ const AdminDashboard = () => {
       setUsers((prev) => prev.filter((member) => member._id !== userId))
     } catch (error) {
       console.error('Failed to delete user:', error)
+      if (!error.response || isLocalToken(token)) {
+        const nextUsers = getLocalUsers().filter((member) => member._id !== userId)
+        saveLocalUsers(nextUsers)
+        const sanitized = nextUsers.map(({ password, ...member }) => member)
+        setUsers(sanitized)
+        setStats((prev) => ({ ...prev, totalUsers: sanitized.length }))
+        return
+      }
       alert(error.response?.data?.error || 'Не удалось удалить пользователя')
     }
   }
@@ -223,6 +256,25 @@ const AdminDashboard = () => {
       )
     } catch (error) {
       console.error('Failed to update user role:', error)
+      if (!error.response || isLocalToken(token)) {
+        const nextUsers = getLocalUsers().map((member) =>
+          member._id === userId
+            ? {
+                ...member,
+                role: nextRole,
+                mentorScope: nextRole === 'mentor' ? nextMentorScope : null,
+              }
+            : member
+        )
+        saveLocalUsers(nextUsers)
+        const sanitized = nextUsers.map(({ password, ...member }) => member)
+        setUsers(sanitized)
+        setStats((prev) => ({
+          ...prev,
+          mentorUsers: sanitized.filter((member) => member.role === 'mentor').length,
+        }))
+        return
+      }
       alert(error.response?.data?.error || 'Не удалось обновить роль')
     }
   }
@@ -237,6 +289,24 @@ const AdminDashboard = () => {
       setEditingCourse(null)
     } catch (error) {
       console.error('Failed to save course:', error)
+      if (!error.response || isLocalToken(token)) {
+        const allCourses = getLocalCourses()
+        const normalizedCourse = {
+          ...courseData,
+          _id: editingCourse?._id || `local-course-${Date.now()}`,
+          lessons: courseData.lessons || [],
+          quiz: courseData.quiz || [],
+        }
+        const nextCourses = editingCourse?._id
+          ? allCourses.map((course) => (course._id === editingCourse._id ? normalizedCourse : course))
+          : [normalizedCourse, ...allCourses]
+
+        saveLocalCourses(nextCourses)
+        upsertCourse(normalizedCourse)
+        setStats((prev) => ({ ...prev, totalCourses: nextCourses.length }))
+        setEditingCourse(null)
+        return
+      }
       alert(error.response?.data?.error || 'Не удалось сохранить курс')
     }
   }

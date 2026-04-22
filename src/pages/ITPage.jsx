@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import Lesson from '../components/Lesson'
 import api from '../lib/api'
-import { getFallbackCoursesByCategory } from '../data/fallbackContent'
+import { getEffectiveCourses } from '../lib/localData'
 
 const ITPage = () => {
   const [selectedDirection, setSelectedDirection] = useState(null)
@@ -16,10 +16,7 @@ const ITPage = () => {
       try {
         setLoading(true)
         const response = await api.get('/courses', { params: { category: 'it' } })
-        const dbCourses =
-          Array.isArray(response.data) && response.data.length
-            ? response.data
-            : getFallbackCoursesByCategory('it')
+        const dbCourses = getEffectiveCourses(response.data).filter((course) => course.category === 'it')
 
         setDirections(
           dbCourses.map((course) => ({
@@ -52,7 +49,7 @@ const ITPage = () => {
         )
       } catch (error) {
         console.error('Failed to load IT courses:', error)
-        const dbCourses = getFallbackCoursesByCategory('it')
+        const dbCourses = getEffectiveCourses().filter((course) => course.category === 'it')
 
         setDirections(
           dbCourses.map((course) => ({

@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import Quiz from '../components/Quiz'
 import Lesson from '../components/Lesson'
 import api from '../lib/api'
-import { getFallbackCourseByKey } from '../data/fallbackContent'
+import { getEffectiveCourseByKey } from '../lib/localData'
 
 const LanguagePage = () => {
   const { lang } = useParams()
@@ -17,10 +17,10 @@ const LanguagePage = () => {
       try {
         setLoading(true)
         const response = await api.get(`/courses/${lang}`)
-        setLanguageCourse(response.data || getFallbackCourseByKey(lang))
+        setLanguageCourse(getEffectiveCourseByKey(lang, response.data))
       } catch (error) {
         console.error('Failed to load language course:', error)
-        setLanguageCourse(getFallbackCourseByKey(lang))
+        setLanguageCourse(getEffectiveCourseByKey(lang))
       } finally {
         setLoading(false)
       }

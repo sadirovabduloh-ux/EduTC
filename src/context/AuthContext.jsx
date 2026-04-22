@@ -1,72 +1,14 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import api, { API_BASE_URL, setApiToken } from '../lib/api'
+import {
+  LOCAL_DEFAULT_PASSWORD,
+  buildLocalToken,
+  getLocalUsers,
+  isLocalToken,
+  saveLocalUsers,
+} from '../lib/localData'
 
 const AuthContext = createContext()
-const LOCAL_USERS_KEY = 'edutc_local_users'
-const LOCAL_AUTH_TOKEN_PREFIX = 'local-demo-token:'
-const LOCAL_DEFAULT_PASSWORD = 'Admin123!'
-
-const seedLocalUsers = () => {
-  const existing = localStorage.getItem(LOCAL_USERS_KEY)
-  if (existing) {
-    try {
-      const parsed = JSON.parse(existing)
-      if (Array.isArray(parsed) && parsed.length) return parsed
-    } catch (error) {
-      console.error('Failed to parse local users:', error)
-    }
-  }
-
-  const now = new Date().toISOString()
-  const seededUsers = [
-    {
-      _id: 'local-admin-sadirov',
-      id: 'local-admin-sadirov',
-      name: 'Abdulloh Sadirov',
-      email: 'sadirov@gmail.com',
-      password: LOCAL_DEFAULT_PASSWORD,
-      role: 'admin',
-      mentorScope: null,
-      provider: 'email',
-      avatar: '',
-      score: 180,
-      completedLessons: 14,
-      createdAt: now,
-    },
-    {
-      _id: 'local-user-amina',
-      id: 'local-user-amina',
-      name: 'Amina',
-      email: 'amina.demo@edutc.local',
-      password: 'demo123',
-      role: 'user',
-      mentorScope: null,
-      provider: 'email',
-      avatar: '',
-      score: 145,
-      completedLessons: 12,
-      createdAt: now,
-    },
-  ]
-
-  localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(seededUsers))
-  return seededUsers
-}
-
-const getLocalUsers = () => {
-  try {
-    return seedLocalUsers()
-  } catch (error) {
-    console.error('Failed to load local users:', error)
-    return []
-  }
-}
-
-const saveLocalUsers = (users) => {
-  localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users))
-}
-
-const isLocalToken = (value) => String(value || '').startsWith(LOCAL_AUTH_TOKEN_PREFIX)
 
 export const useAuth = () => {
   const context = useContext(AuthContext)
@@ -106,11 +48,9 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  const buildLocalToken = (userId) => `${LOCAL_AUTH_TOKEN_PREFIX}${userId}`
-
   const getLocalUserByToken = (value) => {
     if (!isLocalToken(value)) return null
-    const userId = String(value).slice(LOCAL_AUTH_TOKEN_PREFIX.length)
+    const userId = String(value).slice('local-demo-token:'.length)
     return getLocalUsers().find((item) => item._id === userId || item.id === userId) || null
   }
 
