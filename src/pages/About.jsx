@@ -21,7 +21,7 @@ const About = () => {
           className="card text-center"
         >
           <p className="text-xl text-gray-600 dark:text-gray-300 mb-6">
-            Разработано компанией Sdirov
+            Разработано компанией Sadirov
           </p>
           <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
             EduTC — это инновационная образовательная платформа, созданная для того, чтобы сделать обучение
