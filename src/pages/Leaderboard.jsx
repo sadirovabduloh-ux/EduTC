@@ -30,6 +30,7 @@ const Leaderboard = () => {
     return <div className="min-h-screen flex items-center justify-center">Загрузка...</div>
   }
 
+  const topThree = board.slice(0, 3)
   const podium = [board[1], board[0], board[2]].filter(Boolean)
   const podiumMeta = [
     {
@@ -71,7 +72,60 @@ const Leaderboard = () => {
           </p>
         </motion.div>
 
-        <div className="mb-10 grid grid-cols-1 items-end gap-5 md:grid-cols-3">
+        <div className="mb-8 space-y-4 xl:hidden">
+          {topThree.map((u, i) => {
+            const glowClass =
+              i === 0
+                ? 'border-amber-300/80 bg-[linear-gradient(135deg,rgba(255,244,204,0.96),rgba(255,255,255,0.82))] shadow-[0_18px_42px_rgba(245,158,11,0.18)] dark:border-amber-700/70 dark:bg-[linear-gradient(135deg,rgba(120,78,10,0.4),rgba(31,41,55,0.92))]'
+                : i === 1
+                ? 'border-slate-300/80 bg-[linear-gradient(135deg,rgba(238,242,247,0.96),rgba(255,255,255,0.82))] shadow-[0_18px_42px_rgba(100,116,139,0.16)] dark:border-slate-600/70 dark:bg-[linear-gradient(135deg,rgba(71,85,105,0.34),rgba(31,41,55,0.92))]'
+                : 'border-orange-300/80 bg-[linear-gradient(135deg,rgba(255,231,213,0.96),rgba(255,255,255,0.82))] shadow-[0_18px_42px_rgba(194,120,55,0.16)] dark:border-orange-700/70 dark:bg-[linear-gradient(135deg,rgba(124,45,18,0.34),rgba(31,41,55,0.92))]'
+
+            const labelClass =
+              i === 0 ? 'text-amber-700 dark:text-amber-300' : i === 1 ? 'text-slate-700 dark:text-slate-300' : 'text-orange-700 dark:text-orange-300'
+
+            return (
+              <motion.div
+                key={u._id}
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.08 }}
+                className={`rounded-[28px] border p-5 sm:p-6 ${glowClass}`}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex min-w-0 items-center gap-4">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-500 text-xl text-white shadow-[0_14px_28px_rgba(10,132,255,0.22)]">
+                      {u.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <div className={`text-xs font-semibold uppercase tracking-[0.22em] ${labelClass}`}>
+                        {i + 1} место
+                      </div>
+                      <h3 className="mt-1 truncate text-lg font-bold text-gray-900 dark:text-white sm:text-xl">
+                        {u.name}
+                      </h3>
+                      <p className="mt-1 break-all text-sm text-gray-600 dark:text-gray-300">{u.email}</p>
+                    </div>
+                  </div>
+                  <div className="text-3xl sm:text-4xl">{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</div>
+                </div>
+
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                  <div className="rounded-2xl bg-white/60 px-4 py-3 dark:bg-white/5">
+                    <div className="text-xs uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">Очки</div>
+                    <div className="mt-1 text-lg font-semibold text-gray-900 dark:text-white">{u.score || 0}</div>
+                  </div>
+                  <div className="rounded-2xl bg-white/60 px-4 py-3 dark:bg-white/5">
+                    <div className="text-xs uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">Уроки</div>
+                    <div className="mt-1 text-lg font-semibold text-gray-900 dark:text-white">{u.completedLessons || 0}</div>
+                  </div>
+                </div>
+              </motion.div>
+            )
+          })}
+        </div>
+
+        <div className="mb-10 hidden items-end gap-5 xl:grid xl:grid-cols-3">
           {podium.map((u, i) => (
             <motion.div
               key={u._id}
@@ -101,7 +155,7 @@ const Leaderboard = () => {
                   </div>
                 </div>
               </div>
-              <div className={`mx-auto h-16 w-[72%] rounded-t-[22px] shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] sm:h-20 sm:rounded-t-[26px] ${podiumMeta[i].standTone} ${podiumMeta[i].place === 1 ? 'md:h-28' : podiumMeta[i].place === 2 ? 'md:h-20' : 'md:h-14'}`} />
+              <div className={`mx-auto h-16 w-[72%] rounded-t-[22px] shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] sm:h-20 sm:rounded-t-[26px] ${podiumMeta[i].standTone} ${podiumMeta[i].place === 1 ? 'xl:h-28' : podiumMeta[i].place === 2 ? 'xl:h-20' : 'xl:h-14'}`} />
             </motion.div>
           ))}
         </div>

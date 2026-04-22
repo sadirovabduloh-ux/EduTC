@@ -44,7 +44,7 @@ const Header = () => {
               </span>
             </Link>
 
-            <nav className="ios-nav-pill hidden items-center gap-2 rounded-full p-1.5 md:flex">
+            <nav className="ios-nav-pill hidden items-center gap-2 rounded-full p-1.5 xl:flex">
               {navItems.map((item) => (
                 <Link
                   key={item.path}
@@ -100,12 +100,12 @@ const Header = () => {
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="absolute right-0 mt-3 w-52 rounded-[24px] border border-white/70 bg-white/78 py-2 shadow-[0_18px_34px_rgba(15,23,42,0.12)] backdrop-blur-[28px] dark:border-white/10 dark:bg-gray-900/88"
+                        className="ios-user-menu absolute right-0 mt-3 w-[13.5rem] rounded-[24px] py-2"
                       >
                         {(isAdmin || isMentor) && (
                           <Link
                             to="/admin"
-                            className="block px-4 py-2 text-gray-700 hover:bg-white/70 dark:text-gray-300 dark:hover:bg-gray-800/80"
+                            className="block px-4 py-2.5 text-gray-700 hover:bg-white/70 dark:text-gray-300 dark:hover:bg-gray-800/80"
                             onClick={() => setIsUserMenuOpen(false)}
                           >
                             {isAdmin ? 'Админ панель' : 'Панель ментора'}
@@ -113,7 +113,7 @@ const Header = () => {
                         )}
                         <button
                           onClick={handleLogout}
-                          className="block w-full px-4 py-2 text-left text-gray-700 hover:bg-white/70 dark:text-gray-300 dark:hover:bg-gray-800/80"
+                          className="block w-full px-4 py-2.5 text-left text-gray-700 hover:bg-white/70 dark:text-gray-300 dark:hover:bg-gray-800/80"
                         >
                           Выйти
                         </button>
@@ -122,7 +122,7 @@ const Header = () => {
                   </AnimatePresence>
                 </div>
               ) : (
-                <div className="hidden space-x-2 md:flex">
+                <div className="hidden space-x-2 xl:flex">
                   <Link to="/login" className="btn btn-secondary">
                     Войти
                   </Link>
@@ -134,7 +134,7 @@ const Header = () => {
 
               <button
                 onClick={toggleMobileMenu}
-                className="ios-nav-pill ios-nav-icon flex h-11 w-11 items-center justify-center rounded-full transition-colors md:hidden"
+                className="ios-nav-pill ios-nav-icon flex h-11 w-11 items-center justify-center rounded-full transition-colors xl:hidden"
                 aria-label="Меню"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -150,7 +150,7 @@ const Header = () => {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mt-4 border-t border-white/50 pb-2 dark:border-white/10 md:hidden"
+                className="mt-4 border-t border-white/50 pb-2 dark:border-white/10 xl:hidden"
               >
                 <nav className="mt-4 flex flex-col space-y-2">
                   {navItems.map((item) => (

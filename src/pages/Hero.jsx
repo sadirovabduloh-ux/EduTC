@@ -4,28 +4,28 @@ import { Link } from 'react-router-dom'
 const Hero = () => {
   return (
     <section className="min-h-screen px-4 pt-24 pb-10 sm:pt-28 sm:pb-12 lg:pt-32">
-      <div className="container mx-auto max-w-6xl">
+      <div className="container mx-auto max-w-6xl xl:max-w-7xl">
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="ios-section-shell overflow-hidden px-4 py-6 sm:px-8 sm:py-10 lg:px-10 lg:py-12"
+          className="ios-section-shell overflow-hidden px-4 py-6 sm:px-8 sm:py-10 md:px-9 md:py-9 lg:px-10 lg:py-12"
         >
-          <div className="grid items-center gap-8 lg:grid-cols-[1.2fr_0.95fr] lg:gap-10">
-            <div className="text-center lg:text-left">
+          <div className="grid items-center gap-8 md:grid-cols-[1.06fr_0.94fr] md:gap-8 xl:grid-cols-[1.2fr_0.95fr] xl:gap-10">
+            <div className="text-center md:text-left">
               <span className="ios-chip mb-5">
                 Плавный iPhone-style интерфейс для обучения
               </span>
-              <h1 className="mb-5 text-4xl font-semibold leading-[0.98] tracking-[-0.05em] text-gray-900 dark:text-white sm:text-5xl md:text-6xl lg:text-7xl">
+              <h1 className="mb-5 text-4xl font-semibold leading-[0.98] tracking-[-0.05em] text-gray-900 dark:text-white sm:text-5xl md:text-[3.35rem] xl:text-7xl">
                 Образование,
                 <span className="block bg-gradient-to-b from-sky-500 to-blue-700 bg-clip-text text-transparent">
                   которое feels native
                 </span>
               </h1>
-              <p className="mb-7 max-w-2xl text-base leading-7 text-gray-600 dark:text-gray-300 sm:text-lg sm:leading-8">
+              <p className="mb-7 max-w-2xl text-base leading-7 text-gray-600 dark:text-gray-300 sm:text-lg sm:leading-8 md:max-w-xl">
                 Языки, IT и понятный учебный путь в интерфейсе, который ощущается как аккуратное мобильное приложение, а не просто сайт.
               </p>
-              <div className="flex flex-col justify-center gap-3 sm:flex-row lg:justify-start">
+              <div className="flex flex-col justify-center gap-3 sm:flex-row md:justify-start">
                 <Link to="/courses" className="btn btn-primary w-full text-base sm:w-auto sm:text-lg">
                   Открыть курсы
                 </Link>
@@ -39,10 +39,10 @@ const Hero = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.8 }}
-              className="mx-auto w-full max-w-[340px] sm:max-w-[360px]"
+              className="mx-auto w-full max-w-[340px] sm:max-w-[360px] md:max-w-[350px] xl:max-w-[380px]"
             >
-              <div className="ios-orb-card p-5 sm:p-6">
-                <div className="relative min-h-[320px] overflow-hidden rounded-[24px] bg-[linear-gradient(180deg,rgba(255,255,255,0.68)_0%,rgba(242,247,255,0.42)_100%)] p-4 sm:min-h-[360px] sm:rounded-[28px] sm:p-6 dark:bg-[linear-gradient(180deg,rgba(20,26,37,0.7)_0%,rgba(15,20,30,0.48)_100%)]">
+              <div className="ios-orb-card p-5 sm:p-6 md:p-5 xl:p-6">
+                <div className="relative min-h-[320px] overflow-hidden rounded-[24px] bg-[linear-gradient(180deg,rgba(255,255,255,0.68)_0%,rgba(242,247,255,0.42)_100%)] p-4 sm:min-h-[360px] sm:rounded-[28px] sm:p-6 md:min-h-[340px] md:p-5 xl:min-h-[380px] xl:p-6 dark:bg-[linear-gradient(180deg,rgba(20,26,37,0.7)_0%,rgba(15,20,30,0.48)_100%)]">
                   <div className="absolute -right-10 -top-12 h-36 w-36 rounded-full bg-[radial-gradient(circle,#8fd7ff_0%,rgba(143,215,255,0.18)_62%,transparent_72%)] blur-sm" />
                   <div className="absolute -left-12 top-20 h-32 w-32 rounded-full bg-[radial-gradient(circle,#ff8aa5_0%,rgba(255,138,165,0.18)_62%,transparent_72%)] blur-sm" />
                   <div className="absolute bottom-0 right-8 h-40 w-40 rounded-full bg-[radial-gradient(circle,#6fe4d7_0%,rgba(111,228,215,0.16)_60%,transparent_72%)] blur-sm" />

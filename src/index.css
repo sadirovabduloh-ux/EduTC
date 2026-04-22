@@ -216,6 +216,23 @@
     background: rgba(28, 35, 49, 0.72);
   }
 
+  .ios-user-menu {
+    border: 1px solid rgba(226, 232, 240, 0.92);
+    background: rgba(244, 247, 251, 0.96);
+    box-shadow:
+      0 22px 44px rgba(15, 23, 42, 0.16),
+      inset 0 1px 0 rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(18px) saturate(118%);
+  }
+
+  .dark .ios-user-menu {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(18, 24, 35, 0.94);
+    box-shadow:
+      0 22px 44px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
   .card {
     background: var(--ios-card);
     border: 1px solid var(--ios-card-border);
@@ -268,5 +285,17 @@
       radial-gradient(circle at top right, rgba(255, 255, 255, 0.08), transparent 28%),
       linear-gradient(180deg, rgba(24, 31, 44, 0.82) 0%, rgba(18, 24, 35, 0.62) 100%);
     border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  @media (min-width: 768px) and (max-width: 1279px) {
+    .ios-section-shell {
+      border-radius: 36px;
+      padding: 2rem;
+    }
+
+    .ios-orb-card {
+      border-radius: 36px;
+      box-shadow: 0 26px 58px rgba(15, 23, 42, 0.12);
+    }
   }
 }
