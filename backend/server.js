@@ -6,11 +6,49 @@ const bodyParser = require('body-parser')
 const nodemailer = require('nodemailer')
 const mongoose = require('mongoose')
 const session = require('express-session')
+const bcrypt = require('bcryptjs')
 const passport = require('./config/passport')
+const User = require('./models/User')
 
 console.log('Environment variables loaded:')
 console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'SET' : 'NOT SET')
 console.log('MONGODB_URI:', process.env.MONGODB_URI ? 'SET' : 'NOT SET')
+
+const PRIMARY_ADMIN_EMAIL = 'sadirov@gmail.com'
+const PRIMARY_ADMIN_PASSWORD = 'Admin123!'
+const DEMO_EMAILS = [
+  'amina.demo@edutc.local',
+  'bekzat.demo@edutc.local',
+  'diana.demo@edutc.local',
+]
+
+const ensurePrimaryAdmin = async () => {
+  const password = await bcrypt.hash(PRIMARY_ADMIN_PASSWORD, 10)
+
+  await User.updateOne(
+    { email: PRIMARY_ADMIN_EMAIL },
+    {
+      $set: {
+        name: 'Abdulloh Sadirov',
+        email: PRIMARY_ADMIN_EMAIL,
+        password,
+        role: 'admin',
+        provider: 'email',
+        mentorScope: null,
+      },
+      $setOnInsert: {
+        score: 180,
+        completedLessons: 14,
+        createdAt: new Date(),
+      },
+    },
+    { upsert: true }
+  )
+}
+
+const removeDemoUsers = async () => {
+  await User.deleteMany({ email: { $in: DEMO_EMAILS } })
+}
 
 // Routes
 const authRoutes = require('./routes/auth')
@@ -65,8 +103,11 @@ app.use(passport.session())
 
 // Подключение к MongoDB
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/edutc')
-.then(() => {
+.then(async () => {
   console.log('MongoDB connected')
+  await ensurePrimaryAdmin()
+  await removeDemoUsers()
+  console.log('Primary admin is ready and demo users are removed')
 })
 .catch(err => console.error('MongoDB connection error:', err))
 
