@@ -3,10 +3,11 @@ const OpenAI = require('openai')
 const { auth } = require('../middleware/auth')
 
 const router = express.Router()
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-})
+const openai = process.env.OPENAI_API_KEY
+  ? new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY
+    })
+  : null
 
 const getLocalHelpResponse = (message) => {
   const text = String(message || '').toLowerCase()
@@ -77,6 +78,10 @@ router.post('/generate-questions', auth, async (req, res) => {
   try {
     const { topic, level, count = 5 } = req.body
 
+    if (!openai) {
+      return res.status(503).json({ error: 'AI генерация недоступна без OPENAI_API_KEY' })
+    }
+
     const prompt = `Создай ${count} вопросов для теста по теме "${topic}" уровня ${level}.
     Каждый вопрос должен иметь 4 варианта ответа, один правильный.
     Верни в формате JSON массива объектов:
@@ -109,6 +114,10 @@ router.post('/generate-questions', auth, async (req, res) => {
 router.post('/explain', auth, async (req, res) => {
   try {
     const { topic, difficulty = 'средний' } = req.body
+
+    if (!openai) {
+      return res.status(503).json({ error: 'AI объяснение недоступно без OPENAI_API_KEY' })
+    }
 
     const prompt = `Объясни тему "${topic}" на ${difficulty} уровне сложности.
     Используй понятный язык, примеры. Структура: определение, примеры, практические советы.`
