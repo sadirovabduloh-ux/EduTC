@@ -25,34 +25,6 @@ const defaultLocalUsers = () => {
       completedLessons: 14,
       createdAt: now,
     },
-    {
-      _id: 'local-user-amina',
-      id: 'local-user-amina',
-      name: 'Amina',
-      email: 'amina.demo@edutc.local',
-      password: 'demo123',
-      role: 'user',
-      mentorScope: null,
-      provider: 'email',
-      avatar: '',
-      score: 145,
-      completedLessons: 12,
-      createdAt: now,
-    },
-    {
-      _id: 'local-user-bekzat',
-      id: 'local-user-bekzat',
-      name: 'Bekzat',
-      email: 'bekzat.demo@edutc.local',
-      password: 'demo123',
-      role: 'user',
-      mentorScope: null,
-      provider: 'email',
-      avatar: '',
-      score: 110,
-      completedLessons: 9,
-      createdAt: now,
-    },
   ]
 }
 
@@ -64,7 +36,23 @@ export const getLocalUsers = () => {
     const existing = localStorage.getItem(LOCAL_USERS_KEY)
     if (existing) {
       const parsed = JSON.parse(existing)
-      if (Array.isArray(parsed) && parsed.length) return parsed
+      if (Array.isArray(parsed) && parsed.length) {
+        const fallbackAdmin = defaultLocalUsers()[0]
+        const sanitizedUsers = parsed.filter((user) => user?.email === fallbackAdmin.email)
+        const usersWithAdmin = sanitizedUsers.length
+          ? sanitizedUsers.map((user) => ({
+              ...fallbackAdmin,
+              ...user,
+              role: 'admin',
+              mentorScope: null,
+              email: fallbackAdmin.email,
+              password: user.password || fallbackAdmin.password,
+            }))
+          : [fallbackAdmin]
+
+        localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(usersWithAdmin))
+        return usersWithAdmin
+      }
     }
   } catch (error) {
     console.error('Failed to parse local users:', error)

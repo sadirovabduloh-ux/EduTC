@@ -1,11 +1,12 @@
 const express = require('express')
 const User = require('../models/User')
 const { auth } = require('../middleware/auth')
+const { requireDbReady } = require('../middleware/dbReady')
 
 const router = express.Router()
 
 // Топ лидерборда
-router.get('/leaderboard', async (req, res) => {
+router.get('/leaderboard', requireDbReady, async (req, res) => {
   try {
     const users = await User.find().select('-password').sort({ score: -1, completedLessons: -1, createdAt: 1 }).limit(50)
     res.json(users)
@@ -16,7 +17,7 @@ router.get('/leaderboard', async (req, res) => {
 })
 
 // Обновление очков пользователя
-router.patch('/score', auth, async (req, res) => {
+router.patch('/score', auth, requireDbReady, async (req, res) => {
   try {
     const { action } = req.body
     if (!action) {

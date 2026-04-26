@@ -1,7 +1,10 @@
 const express = require('express')
 const Course = require('../models/Course')
+const { requireDbReady } = require('../middleware/dbReady')
 
 const router = express.Router()
+
+router.use(requireDbReady)
 
 router.get('/courses', async (req, res) => {
   try {

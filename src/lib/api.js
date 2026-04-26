@@ -1,6 +1,9 @@
 import axios from 'axios'
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5002/api'
+const envApiBaseUrl = String(import.meta.env.VITE_API_URL || '').trim()
+
+export const API_BASE_URL =
+  envApiBaseUrl || (import.meta.env.DEV ? '/api' : 'https://edutc-backend.onrender.com/api')
 
 const api = axios.create({
   baseURL: API_BASE_URL,

@@ -2,6 +2,7 @@ const express = require('express')
 const Course = require('../models/Course')
 const User = require('../models/User')
 const { auth, adminAuth, staffAuth } = require('../middleware/auth')
+const { requireDbReady } = require('../middleware/dbReady')
 
 const router = express.Router()
 
@@ -69,7 +70,7 @@ const buildCourseQuery = (req) => {
   return {}
 }
 
-router.use(auth, staffAuth)
+router.use(auth, staffAuth, requireDbReady)
 
 router.get('/courses', async (req, res) => {
   try {

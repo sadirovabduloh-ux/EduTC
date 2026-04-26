@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const passport = require('passport')
 const User = require('../models/User')
+const { requireDbReady } = require('../middleware/dbReady')
 
 const router = express.Router()
 
@@ -36,7 +37,7 @@ router.get('/providers', (req, res) => {
 })
 
 // Регистрация
-router.post('/register', async (req, res) => {
+router.post('/register', requireDbReady, async (req, res) => {
   try {
     const name = String(req.body.name || '').trim()
     const email = String(req.body.email || '').trim().toLowerCase()
@@ -87,7 +88,7 @@ router.post('/register', async (req, res) => {
 })
 
 // Вход
-router.post('/login', async (req, res) => {
+router.post('/login', requireDbReady, async (req, res) => {
   try {
     const email = String(req.body.email || '').trim().toLowerCase()
     const password = String(req.body.password || '')
@@ -137,6 +138,7 @@ router.get('/google',
 )
 
 router.get('/google/callback',
+  requireDbReady,
   passport.authenticate('google', { failureRedirect: '/login' }),
   async (req, res) => {
     try {
@@ -163,7 +165,7 @@ router.get('/apple', (req, res) => {
 })
 
 // Получение профиля
-router.get('/profile', require('../middleware/auth').auth, async (req, res) => {
+router.get('/profile', require('../middleware/auth').auth, requireDbReady, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password')
     if (!user) {
