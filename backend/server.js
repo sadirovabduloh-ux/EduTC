@@ -28,11 +28,22 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
 ].filter(Boolean)
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true
+  if (allowedOrigins.includes(origin)) return true
+
+  try {
+    const parsedOrigin = new URL(origin)
+    return parsedOrigin.hostname.endsWith('.vercel.app')
+  } catch (error) {
+    return false
+  }
+}
 
 // Middleware
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (isAllowedOrigin(origin)) {
       return callback(null, true)
     }
     return callback(new Error('Not allowed by CORS'))
