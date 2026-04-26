@@ -6,56 +6,11 @@ const bodyParser = require('body-parser')
 const nodemailer = require('nodemailer')
 const mongoose = require('mongoose')
 const session = require('express-session')
-const bcrypt = require('bcryptjs')
 const passport = require('./config/passport')
-const User = require('./models/User')
 
 console.log('Environment variables loaded:')
 console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'SET' : 'NOT SET')
 console.log('MONGODB_URI:', process.env.MONGODB_URI ? 'SET' : 'NOT SET')
-
-const seedDemoUsers = async () => {
-  const passwordHash = await bcrypt.hash('demo123', 10)
-  const demoUsers = [
-    {
-      name: 'Amina',
-      email: 'amina.demo@edutc.local',
-      password: passwordHash,
-      provider: 'email',
-      role: 'user',
-      score: 145,
-      completedLessons: 12,
-    },
-    {
-      name: 'Bekzat',
-      email: 'bekzat.demo@edutc.local',
-      password: passwordHash,
-      provider: 'email',
-      role: 'user',
-      score: 110,
-      completedLessons: 9,
-    },
-    {
-      name: 'Diana',
-      email: 'diana.demo@edutc.local',
-      password: passwordHash,
-      provider: 'email',
-      role: 'user',
-      score: 90,
-      completedLessons: 7,
-    },
-  ]
-
-  await Promise.all(
-    demoUsers.map((demoUser) =>
-      User.updateOne(
-        { email: demoUser.email },
-        { $setOnInsert: demoUser },
-        { upsert: true }
-      )
-    )
-  )
-}
 
 // Routes
 const authRoutes = require('./routes/auth')
@@ -99,10 +54,8 @@ app.use(passport.session())
 
 // Подключение к MongoDB
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/edutc')
-.then(async () => {
+.then(() => {
   console.log('MongoDB connected')
-  await seedDemoUsers()
-  console.log('Demo users are ready')
 })
 .catch(err => console.error('MongoDB connection error:', err))
 
