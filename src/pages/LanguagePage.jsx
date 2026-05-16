@@ -41,6 +41,7 @@ const LanguagePage = () => {
           correct: Number.isInteger(item.correctIndex) ? item.correctIndex : 0,
         })),
         lessons: (languageCourse.lessons || []).map((lesson) => ({
+          id: lesson.lessonId || `${lang}-lesson`,
           title: lesson.title,
           explanation: lesson.content || lesson.description || '',
           example: lesson.example,
@@ -118,6 +119,7 @@ const LanguagePage = () => {
         {mode === 'lesson' && (
           <Lesson
             lessons={language.lessons}
+            directionKey={lang}
             onComplete={handleLessonComplete}
           />
         )}

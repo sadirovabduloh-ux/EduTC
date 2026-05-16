@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { useAuth } from '../context/AuthContext'
 
-const Lesson = ({ lessons, onComplete }) => {
+const Lesson = ({ lessons, onComplete, directionKey }) => {
   const [currentLesson, setCurrentLesson] = useState(0)
   const [progress, setProgress] = useState(0)
   const [userAnswer, setUserAnswer] = useState('')
   const [showFeedback, setShowFeedback] = useState(false)
   const [isCorrect, setIsCorrect] = useState(false)
+  const { updateScore, recordLessonProgress } = useAuth()
 
   const lesson = lessons[currentLesson]
 
@@ -16,7 +18,11 @@ const Lesson = ({ lessons, onComplete }) => {
     setShowFeedback(true)
   }
 
-  const nextLesson = () => {
+  const nextLesson = async () => {
+    const lessonId = lesson.id || `${directionKey || 'lesson'}-${currentLesson + 1}`
+    recordLessonProgress(directionKey || 'general', lessonId)
+    await updateScore('lesson').catch(() => {})
+
     if (currentLesson < lessons.length - 1) {
       setCurrentLesson(currentLesson + 1)
       setProgress(((currentLesson + 1) / lessons.length) * 100)
@@ -60,9 +66,10 @@ const Lesson = ({ lessons, onComplete }) => {
             <h3 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white sm:text-xl">
               Объяснение
             </h3>
-            <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-              {lesson.explanation}
-            </p>
+            <div
+              className="text-gray-600 dark:text-gray-300 leading-relaxed [&_p]:mb-3 last:[&_p]:mb-0"
+              dangerouslySetInnerHTML={{ __html: lesson.explanation || '' }}
+            />
           </div>
 
           <div>

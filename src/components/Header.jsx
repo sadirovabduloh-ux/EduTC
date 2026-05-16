@@ -17,7 +17,6 @@ const Header = () => {
     { path: '/courses', label: 'Курсы' },
     { path: '/leaderboard', label: 'Лидерборд' },
     { path: '/about', label: 'О нас' },
-    { path: '/contact', label: 'Контакты' },
   ]
 
   const toggleMobileMenu = () => setIsMobileMenuOpen((prev) => !prev)
@@ -102,6 +101,20 @@ const Header = () => {
                         exit={{ opacity: 0, y: -10 }}
                         className="ios-user-menu absolute right-0 mt-3 w-[13.5rem] rounded-[24px] py-2"
                       >
+                        <Link
+                          to="/contact"
+                          className="block px-4 py-2.5 text-gray-700 hover:bg-white/70 dark:text-gray-300 dark:hover:bg-gray-800/80"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          Техподдержка
+                        </Link>
+                        <Link
+                          to="/profile"
+                          className="block px-4 py-2.5 text-gray-700 hover:bg-white/70 dark:text-gray-300 dark:hover:bg-gray-800/80"
+                          onClick={() => setIsUserMenuOpen(false)}
+                        >
+                          Мой профиль
+                        </Link>
                         {(isAdmin || isMentor) && (
                           <Link
                             to="/admin"
@@ -123,6 +136,9 @@ const Header = () => {
                 </div>
               ) : (
                 <div className="hidden space-x-2 xl:flex">
+                  <Link to="/contact" className="btn btn-secondary">
+                    Техподдержка
+                  </Link>
                   <Link to="/login" className="btn btn-secondary">
                     Войти
                   </Link>
@@ -170,6 +186,13 @@ const Header = () => {
 
                   {user ? (
                     <>
+                      <Link
+                        to="/profile"
+                        className="rounded-2xl px-4 py-3 text-gray-700 hover:bg-white/70 dark:text-gray-300 dark:hover:bg-gray-800/80"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        Мой профиль
+                      </Link>
                       {(isAdmin || isMentor) && (
                         <Link
                           to="/admin"
@@ -188,6 +211,13 @@ const Header = () => {
                     </>
                   ) : (
                     <>
+                      <Link
+                        to="/contact"
+                        className="rounded-2xl px-4 py-3 text-gray-700 hover:bg-white/70 dark:text-gray-300 dark:hover:bg-gray-800/80"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        Техподдержка
+                      </Link>
                       <Link
                         to="/login"
                         className="rounded-2xl px-4 py-3 text-gray-700 hover:bg-white/70 dark:text-gray-300 dark:hover:bg-gray-800/80"

@@ -25,7 +25,7 @@ const Contact = () => {
 
     try {
       await api.post('/contact', formData)
-      setSubmitMessage('Спасибо за ваше сообщение! Мы свяжемся с вами в ближайшее время.')
+      setSubmitMessage('Спасибо! Запрос в техподдержку отправлен, мы ответим вам в ближайшее время.')
       setFormData({ name: '', email: '', message: '' })
     } catch (error) {
       setSubmitMessage('Произошла ошибка. Попробуйте еще раз.')
@@ -43,10 +43,10 @@ const Contact = () => {
           className="text-center mb-12"
         >
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-            Свяжитесь с нами
+            Техподдержка
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300">
-            У вас есть вопросы? Напишите нам, и мы ответим в ближайшее время
+            Если у вас возникли вопросы, проблемы со входом или обучением, напишите нам, и мы постараемся помочь как можно быстрее
           </p>
         </motion.div>
 
@@ -91,7 +91,7 @@ const Contact = () => {
 
           <div>
             <label htmlFor="message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Сообщение
+              Опишите проблему
             </label>
             <textarea
               id="message"
@@ -101,7 +101,7 @@ const Contact = () => {
               required
               rows={6}
               className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors resize-none"
-              placeholder="Ваше сообщение..."
+              placeholder="Например: не могу войти в аккаунт, не сохраняется урок, не работает сброс пароля..."
             />
           </div>
 
@@ -110,7 +110,7 @@ const Contact = () => {
             disabled={isSubmitting}
             className="w-full btn btn-primary text-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? 'Отправка...' : 'Отправить сообщение'}
+            {isSubmitting ? 'Отправка...' : 'Отправить в техподдержку'}
           </button>
 
           {submitMessage && (

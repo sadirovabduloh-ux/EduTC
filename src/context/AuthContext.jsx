@@ -1,12 +1,20 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import api, { API_BASE_URL, setApiToken } from '../lib/api'
 import {
-  LOCAL_DEFAULT_PASSWORD,
   buildLocalToken,
   getLocalUsers,
+  isLocalFallbackEnabled,
   isLocalToken,
   saveLocalUsers,
 } from '../lib/localData'
+import {
+  ensureLearningSession,
+  endLearningSession,
+  flushLearningSession,
+  getCurrentSessionDuration,
+  loadLearningStats,
+  recordLessonCompletion,
+} from '../lib/learningStats'
 
 const AuthContext = createContext()
 
@@ -22,6 +30,8 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [token, setToken] = useState(localStorage.getItem('token'))
+  const [learningStats, setLearningStats] = useState(loadLearningStats(null))
+  const [sessionDurationMs, setSessionDurationMs] = useState(0)
 
   const normalizeUser = (rawUser) => {
     if (!rawUser) return null
@@ -102,11 +112,58 @@ export const AuthProvider = ({ children }) => {
     setApiToken(token)
   }, [token])
 
+  useEffect(() => {
+    const userId = user?._id || user?.id
+    if (!userId) {
+      setLearningStats(loadLearningStats(null))
+      setSessionDurationMs(0)
+      return undefined
+    }
+
+    setLearningStats(ensureLearningSession(userId))
+    setSessionDurationMs(getCurrentSessionDuration(userId))
+
+    const sessionTimer = window.setInterval(() => {
+      setSessionDurationMs(getCurrentSessionDuration(userId))
+    }, 1000)
+
+    const flushTimer = window.setInterval(() => {
+      setLearningStats(flushLearningSession(userId))
+    }, 15000)
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setLearningStats(flushLearningSession(userId))
+      }
+    }
+
+    const handleBeforeUnload = () => {
+      flushLearningSession(userId)
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
+    return () => {
+      window.clearInterval(sessionTimer)
+      window.clearInterval(flushTimer)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      setLearningStats(endLearningSession(userId))
+    }
+  }, [user?._id, user?.id])
+
   // Загрузка профиля при монтировании
   useEffect(() => {
     const loadUser = async () => {
       if (token) {
         if (isLocalToken(token)) {
+          if (!isLocalFallbackEnabled) {
+            logout()
+            setLoading(false)
+            return
+          }
+
           const localUser = getLocalUserByToken(token)
           if (localUser) {
             setUser(normalizeUser(localUser))
@@ -140,7 +197,7 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true }
     } catch (error) {
-      if (!error.response) {
+      if (!error.response && isLocalFallbackEnabled) {
         return loginLocal(email, password)
       }
       return { success: false, error: error.response?.data?.error || 'Login failed' }
@@ -156,7 +213,7 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true }
     } catch (error) {
-      if (!error.response) {
+      if (!error.response && isLocalFallbackEnabled) {
         return registerLocal(name, email, password)
       }
       return { success: false, error: error.response?.data?.error || 'Registration failed' }
@@ -198,22 +255,87 @@ export const AuthProvider = ({ children }) => {
     applyAuth(null)
   }
 
+  const updateProfileAvatar = async (avatar) => {
+    try {
+      if (isLocalFallbackEnabled && isLocalToken(token) && user) {
+        const users = getLocalUsers()
+        const updatedUsers = users.map((item) =>
+          (item._id || item.id) === (user._id || user.id) ? { ...item, avatar } : item
+        )
+
+        saveLocalUsers(updatedUsers)
+        const nextUser = updatedUsers.find((item) => (item._id || item.id) === (user._id || user.id))
+        if (nextUser) {
+          setUser(normalizeUser(nextUser))
+          return { success: true, user: normalizeUser(nextUser) }
+        }
+      }
+
+      const response = await api.patch('/auth/profile', { avatar })
+      if (response.data) {
+        setUser(normalizeUser(response.data))
+      }
+      return { success: true, user: normalizeUser(response.data) }
+    } catch (error) {
+      console.error('Profile avatar update failed:', error)
+      return { success: false, error: error.response?.data?.error || 'Не удалось обновить фото профиля' }
+    }
+  }
+
+  const updateProfileName = async (name) => {
+    try {
+      const normalizedName = String(name || '').trim()
+
+      if (normalizedName.length < 2) {
+        return { success: false, error: 'Имя должно содержать минимум 2 символа' }
+      }
+
+      if (isLocalFallbackEnabled && isLocalToken(token) && user) {
+        const users = getLocalUsers()
+        const updatedUsers = users.map((item) =>
+          (item._id || item.id) === (user._id || user.id) ? { ...item, name: normalizedName } : item
+        )
+
+        saveLocalUsers(updatedUsers)
+        const nextUser = updatedUsers.find((item) => (item._id || item.id) === (user._id || user.id))
+        if (nextUser) {
+          setUser(normalizeUser(nextUser))
+          return { success: true, user: normalizeUser(nextUser) }
+        }
+      }
+
+      const response = await api.patch('/auth/profile', {
+        name: normalizedName,
+        avatar: user?.avatar || '',
+      })
+      if (response.data) {
+        setUser(normalizeUser(response.data))
+      }
+      return { success: true, user: normalizeUser(response.data) }
+    } catch (error) {
+      console.error('Profile name update failed:', error)
+      return { success: false, error: error.response?.data?.error || 'Не удалось обновить имя' }
+    }
+  }
+
   const updateScore = async (action) => {
     try {
-      if (isLocalToken(token) && user) {
+      if (isLocalFallbackEnabled && isLocalToken(token) && user) {
         const users = getLocalUsers()
         const updatedUsers = users.map((item) => {
           if ((item._id || item.id) !== (user._id || user.id)) return item
 
           const nextScore =
             action === 'correct_answer'
-              ? (item.score || 0) + 10
+              ? (item.score || 0) + 5
               : action === 'test_complete'
-              ? (item.score || 0) + 25
+              ? (item.score || 0) + 20
+              : action === 'lesson'
+              ? (item.score || 0) + 10
               : item.score || 0
 
           const nextCompletedLessons =
-            action === 'lesson_complete' ? (item.completedLessons || 0) + 1 : item.completedLessons || 0
+            action === 'lesson' ? (item.completedLessons || 0) + 1 : item.completedLessons || 0
 
           return {
             ...item,
@@ -241,6 +363,15 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  const recordLessonProgress = (directionKey, lessonId) => {
+    const userId = user?._id || user?.id
+    if (!userId) return null
+
+    const nextStats = recordLessonCompletion(userId, directionKey, lessonId)
+    setLearningStats(nextStats)
+    return nextStats
+  }
+
   const value = {
     user,
     token,
@@ -251,7 +382,12 @@ export const AuthProvider = ({ children }) => {
     loginWithApple,
     loginWithToken,
     logout,
+    updateProfileName,
+    updateProfileAvatar,
     updateScore,
+    recordLessonProgress,
+    learningStats,
+    sessionDurationMs,
     isAdmin: user?.role === 'admin',
     isMentor: user?.role === 'mentor'
   }

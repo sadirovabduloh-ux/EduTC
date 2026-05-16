@@ -3,12 +3,14 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
 import api from '../lib/api'
+import { isLocalFallbackEnabled } from '../lib/localData'
 
 const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   })
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [providers, setProviders] = useState({ google: false, apple: false })
   const [error, setError] = useState('')
@@ -23,6 +25,9 @@ const Login = () => {
         setProviders(response.data)
       } catch (loadError) {
         console.error('Failed to load auth providers:', loadError)
+        if (isLocalFallbackEnabled) {
+          setProviders({ google: false, apple: false })
+        }
       }
     }
 
@@ -110,15 +115,25 @@ const Login = () => {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Пароль
             </label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
-              placeholder="••••••••"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                className="w-full px-3 py-2 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
+              >
+                {showPassword ? '🙈' : '👁️'}
+              </button>
+            </div>
           </div>
 
           <button
@@ -128,6 +143,12 @@ const Login = () => {
           >
             {loading ? 'Вход...' : 'Войти'}
           </button>
+
+          <div className="text-right">
+            <Link to="/forgot-password" className="text-sm font-medium text-primary-600 hover:text-primary-500">
+              Забыли пароль?
+            </Link>
+          </div>
         </form>
 
         <div className="mt-6">

@@ -28,6 +28,13 @@ const getLocalHelpResponse = (message) => {
   return 'Я могу помочь по HTML, CSS, JavaScript, React, backend и базам данных. Напиши конкретный вопрос, например: "что такое JWT", "объясни JOIN" или "с чего начать backend".'
 }
 
+const quickPrompts = [
+  'С чего начать frontend?',
+  'Что есть по английскому?',
+  'Сколько у меня баллов?',
+  'Как сбросить пароль?',
+]
+
 const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState([
@@ -98,6 +105,10 @@ const ChatWidget = () => {
     }
   }
 
+  const handleQuickPrompt = (prompt) => {
+    setInputMessage(prompt)
+  }
+
   return (
     <>
       {/* Кнопка открытия чата */}
@@ -142,7 +153,7 @@ const ChatWidget = () => {
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 dark:text-white">EduBot</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">AI помощник</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Помощник по обучению и сайту</p>
                   </div>
                 </div>
                 <button
@@ -157,6 +168,18 @@ const ChatWidget = () => {
 
               {/* Сообщения */}
               <div className="flex-1 space-y-4 overflow-y-auto p-4">
+                <div className="flex flex-wrap gap-2">
+                  {quickPrompts.map((prompt) => (
+                    <button
+                      key={prompt}
+                      onClick={() => handleQuickPrompt(prompt)}
+                      className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-600 transition-colors hover:border-primary-300 hover:text-primary-600 dark:border-gray-600 dark:bg-gray-700/60 dark:text-gray-300 dark:hover:border-primary-500 dark:hover:text-primary-300"
+                    >
+                      {prompt}
+                    </button>
+                  ))}
+                </div>
+
                 {messages.map((message) => (
                   <motion.div
                     key={message.id}

@@ -156,9 +156,10 @@ router.delete('/courses/:id', async (req, res) => {
   }
 })
 
-router.get('/users', adminAuth, async (req, res) => {
+router.get('/users', async (req, res) => {
   try {
-    const users = await User.find().select('-password').sort({ createdAt: -1 })
+    const query = req.user.role === 'mentor' ? { role: 'user' } : {}
+    const users = await User.find(query).select('-password').sort({ createdAt: -1 })
     res.json(users)
   } catch (error) {
     console.error('Admin users fetch error:', error)
@@ -195,6 +196,35 @@ router.put('/users/:id/role', adminAuth, async (req, res) => {
     res.json(user)
   } catch (error) {
     console.error('Admin update user role error:', error)
+    res.status(500).json({ error: 'Ошибка сервера' })
+  }
+})
+
+router.patch('/users/:id/score', async (req, res) => {
+  try {
+    const requestedScore = Number(req.body.score)
+
+    if (!Number.isFinite(requestedScore)) {
+      return res.status(400).json({ error: 'Нужно указать корректное число баллов' })
+    }
+
+    const normalizedScore = Math.max(0, Math.round(requestedScore))
+    const user = await User.findById(req.params.id).select('-password')
+
+    if (!user) {
+      return res.status(404).json({ error: 'Пользователь не найден' })
+    }
+
+    if (req.user.role === 'mentor' && user.role !== 'user') {
+      return res.status(403).json({ error: 'Ментор может менять баллы только обычным пользователям' })
+    }
+
+    user.score = normalizedScore
+    await user.save()
+
+    res.json(user)
+  } catch (error) {
+    console.error('Admin update user score error:', error)
     res.status(500).json({ error: 'Ошибка сервера' })
   }
 })

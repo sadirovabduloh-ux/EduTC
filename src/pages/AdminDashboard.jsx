@@ -6,6 +6,7 @@ import {
   buildLocalStats,
   getLocalCourses,
   getLocalUsers,
+  isLocalFallbackEnabled,
   isLocalToken,
   saveLocalCourses,
   saveLocalUsers,
@@ -147,8 +148,11 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('courses')
   const [courses, setCourses] = useState([])
   const [users, setUsers] = useState([])
+  const [scoreDrafts, setScoreDrafts] = useState({})
+  const [savingScoreFor, setSavingScoreFor] = useState('')
   const [stats, setStats] = useState({})
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
   const [editingCourse, setEditingCourse] = useState(null)
   const [selectedEditableExistingCourseId, setSelectedEditableExistingCourseId] = useState('')
   const availableTabs = useMemo(() => {
@@ -159,8 +163,20 @@ const AdminDashboard = () => {
       ]
     }
 
-    return [{ id: 'courses', label: 'Мои курсы' }]
+    return [
+      { id: 'courses', label: 'Мои курсы' },
+      { id: 'users', label: 'Пользователи' },
+    ]
   }, [isAdmin])
+
+  useEffect(() => {
+    setScoreDrafts(
+      users.reduce((acc, member) => {
+        acc[member._id] = String(member.score ?? 0)
+        return acc
+      }, {})
+    )
+  }, [users])
 
   useEffect(() => {
     loadData()
@@ -174,11 +190,9 @@ const AdminDashboard = () => {
   const loadData = async () => {
     try {
       setLoading(true)
+      setLoadError('')
 
-      const requests = [api.get('/admin/courses'), api.get('/admin/stats')]
-      if (isAdmin) {
-        requests.push(api.get('/admin/users'))
-      }
+      const requests = [api.get('/admin/courses'), api.get('/admin/stats'), api.get('/admin/users')]
 
       const [coursesRes, statsRes, usersRes] = await Promise.all(requests)
       setCourses(coursesRes.data)
@@ -186,11 +200,18 @@ const AdminDashboard = () => {
       setUsers(usersRes?.data || [])
     } catch (error) {
       console.error('Failed to load admin data:', error)
-      const localUsers = getLocalUsers().map(({ password, ...member }) => member)
-      const localCourses = getLocalCourses()
-      setCourses(getScopedCourses(localCourses))
-      setUsers(localUsers)
-      setStats(buildLocalStats(localUsers, localCourses, mentorScope))
+      if (isLocalFallbackEnabled) {
+        const localUsers = getLocalUsers().map(({ password, ...member }) => member)
+        const localCourses = getLocalCourses()
+        setCourses(getScopedCourses(localCourses))
+        setUsers(localUsers)
+        setStats(buildLocalStats(localUsers, localCourses, mentorScope))
+      } else {
+        setCourses([])
+        setUsers([])
+        setStats({})
+        setLoadError(error.response?.data?.error || 'Не удалось загрузить данные админпанели.')
+      }
     } finally {
       setLoading(false)
     }
@@ -213,7 +234,7 @@ const AdminDashboard = () => {
       setCourses((prev) => prev.filter((course) => course._id !== id))
     } catch (error) {
       console.error('Failed to delete course:', error)
-      if (!error.response || isLocalToken(token)) {
+      if (isLocalFallbackEnabled && (!error.response || isLocalToken(token))) {
         const nextCourses = getLocalCourses().filter((course) => course._id !== id)
         saveLocalCourses(nextCourses)
         setCourses(getScopedCourses(nextCourses))
@@ -232,7 +253,7 @@ const AdminDashboard = () => {
       setUsers((prev) => prev.filter((member) => member._id !== userId))
     } catch (error) {
       console.error('Failed to delete user:', error)
-      if (!error.response || isLocalToken(token)) {
+      if (isLocalFallbackEnabled && (!error.response || isLocalToken(token))) {
         const nextUsers = getLocalUsers().filter((member) => member._id !== userId)
         saveLocalUsers(nextUsers)
         const sanitized = nextUsers.map(({ password, ...member }) => member)
@@ -241,6 +262,47 @@ const AdminDashboard = () => {
         return
       }
       alert(error.response?.data?.error || 'Не удалось удалить пользователя')
+    }
+  }
+
+  const handleSaveScore = async (member) => {
+    const rawValue = scoreDrafts[member._id]
+    const parsedValue = Number(rawValue)
+
+    if (!Number.isFinite(parsedValue)) {
+      alert('Введите корректное число баллов')
+      return
+    }
+
+    try {
+      setSavingScoreFor(member._id)
+      const response = await api.patch(`/admin/users/${member._id}/score`, {
+        score: parsedValue,
+      })
+
+      setUsers((prev) => prev.map((item) => (item._id === member._id ? response.data : item)))
+      setScoreDrafts((prev) => ({ ...prev, [member._id]: String(response.data.score ?? 0) }))
+    } catch (error) {
+      console.error('Failed to update user score:', error)
+      if (isLocalFallbackEnabled && (!error.response || isLocalToken(token))) {
+        const normalizedScore = Math.max(0, Math.round(parsedValue))
+        const nextUsers = getLocalUsers().map((item) =>
+          item._id === member._id
+            ? {
+                ...item,
+                score: normalizedScore,
+              }
+            : item
+        )
+        saveLocalUsers(nextUsers)
+        const sanitized = nextUsers.map(({ password, ...item }) => item)
+        setUsers(sanitized)
+        setScoreDrafts((prev) => ({ ...prev, [member._id]: String(normalizedScore) }))
+        return
+      }
+      alert(error.response?.data?.error || 'Не удалось обновить баллы')
+    } finally {
+      setSavingScoreFor('')
     }
   }
 
@@ -256,7 +318,7 @@ const AdminDashboard = () => {
       )
     } catch (error) {
       console.error('Failed to update user role:', error)
-      if (!error.response || isLocalToken(token)) {
+      if (isLocalFallbackEnabled && (!error.response || isLocalToken(token))) {
         const nextUsers = getLocalUsers().map((member) =>
           member._id === userId
             ? {
@@ -289,7 +351,7 @@ const AdminDashboard = () => {
       setEditingCourse(null)
     } catch (error) {
       console.error('Failed to save course:', error)
-      if (!error.response || isLocalToken(token)) {
+      if (isLocalFallbackEnabled && (!error.response || isLocalToken(token))) {
         const allCourses = getLocalCourses()
         const normalizedCourse = {
           ...courseData,
@@ -370,6 +432,12 @@ const AdminDashboard = () => {
               </div>
             </div>
           </div>
+
+          {loadError && (
+            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+              {loadError}
+            </div>
+          )}
         </motion.div>
 
         <div className="mb-6">
@@ -518,14 +586,14 @@ const AdminDashboard = () => {
           </motion.div>
         )}
 
-        {isAdmin && activeTab === 'users' && (
+        {activeTab === 'users' && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="space-y-6"
           >
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Управление пользователями
+              {isAdmin ? 'Управление пользователями' : 'Пользователи и баллы'}
             </h2>
 
             <div className="overflow-x-auto rounded-lg">
@@ -543,6 +611,9 @@ const AdminDashboard = () => {
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                       Направление
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Баллы
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                       Дата регистрации
@@ -569,49 +640,88 @@ const AdminDashboard = () => {
                         {member.email}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <select
-                          value={member.role}
-                          onChange={(e) =>
-                            handleUpdateRole(
-                              member._id,
-                              e.target.value,
-                              e.target.value === 'mentor'
-                                ? member.mentorScope || defaultMentorScope
-                                : null
-                            )
-                          }
-                          className="text-xs border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700"
-                        >
-                          <option value="user">Пользователь</option>
-                          <option value="mentor">Ментор</option>
-                          <option value="admin">Админ</option>
-                        </select>
+                        {isAdmin ? (
+                          <select
+                            value={member.role}
+                            onChange={(e) =>
+                              handleUpdateRole(
+                                member._id,
+                                e.target.value,
+                                e.target.value === 'mentor'
+                                  ? member.mentorScope || defaultMentorScope
+                                  : null
+                              )
+                            }
+                            className="text-xs border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700"
+                          >
+                            <option value="user">Пользователь</option>
+                            <option value="mentor">Ментор</option>
+                            <option value="admin">Админ</option>
+                          </select>
+                        ) : (
+                          <span className="text-sm text-gray-500 dark:text-gray-300">{member.role}</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <select
-                          value={member.mentorScope || ''}
-                          disabled={member.role !== 'mentor'}
-                          onChange={(e) => handleUpdateRole(member._id, member.role, e.target.value)}
-                          className="text-xs border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 disabled:opacity-50"
-                        >
-                          <option value="">Не задано</option>
-                          {mentorScopeOptions.map((scope) => (
-                            <option key={scope.value} value={scope.value}>
-                              {scope.label}
-                            </option>
-                          ))}
-                        </select>
+                        {isAdmin ? (
+                          <select
+                            value={member.mentorScope || ''}
+                            disabled={member.role !== 'mentor'}
+                            onChange={(e) => handleUpdateRole(member._id, member.role, e.target.value)}
+                            className="text-xs border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 disabled:opacity-50"
+                          >
+                            <option value="">Не задано</option>
+                            {mentorScopeOptions.map((scope) => (
+                              <option key={scope.value} value={scope.value}>
+                                {scope.label}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span className="text-sm text-gray-500 dark:text-gray-300">
+                            {member.mentorScope
+                              ? mentorScopeOptions.find((scope) => scope.value === member.mentorScope)?.label ||
+                                member.mentorScope
+                              : 'Не задано'}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex min-w-[180px] items-center gap-2">
+                          <input
+                            type="number"
+                            value={scoreDrafts[member._id] ?? String(member.score ?? 0)}
+                            onChange={(e) =>
+                              setScoreDrafts((prev) => ({
+                                ...prev,
+                                [member._id]: e.target.value,
+                              }))
+                            }
+                            className="w-24 rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                          />
+                          <button
+                            onClick={() => handleSaveScore(member)}
+                            disabled={savingScoreFor === member._id}
+                            className="rounded bg-primary-600 px-3 py-1 text-xs font-medium text-white hover:bg-primary-700 disabled:opacity-60"
+                          >
+                            {savingScoreFor === member._id ? '...' : 'Сохранить'}
+                          </button>
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                         {new Date(member.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => handleDeleteUser(member._id)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          Удалить
-                        </button>
+                        {isAdmin ? (
+                          <button
+                            onClick={() => handleDeleteUser(member._id)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            Удалить
+                          </button>
+                        ) : (
+                          <span className="text-gray-400">Только баллы</span>
+                        )}
                       </td>
                     </tr>
                   ))}

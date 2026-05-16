@@ -4,6 +4,11 @@ export const LOCAL_USERS_KEY = 'edutc_local_users'
 export const LOCAL_COURSES_KEY = 'edutc_local_courses'
 export const LOCAL_AUTH_TOKEN_PREFIX = 'local-demo-token:'
 export const LOCAL_DEFAULT_PASSWORD = 'Admin123!'
+export const isLocalFallbackEnabled =
+  import.meta.env.DEV ||
+  String(import.meta.env.VITE_ENABLE_LOCAL_FALLBACK || '')
+    .trim()
+    .toLowerCase() === 'true'
 
 const clone = (value) => JSON.parse(JSON.stringify(value))
 
@@ -88,15 +93,21 @@ export const saveLocalCourses = (courses) => {
 }
 
 export const getEffectiveCourses = (remoteCourses) =>
-  Array.isArray(remoteCourses) && remoteCourses.length ? remoteCourses : getLocalCourses()
+  Array.isArray(remoteCourses) && remoteCourses.length
+    ? remoteCourses
+    : isLocalFallbackEnabled
+    ? getLocalCourses()
+    : []
 
 export const getEffectiveCourseByKey = (courseKey, remoteCourse = null) => {
   if (remoteCourse) return remoteCourse
+  if (!isLocalFallbackEnabled) return null
   return getLocalCourses().find((course) => course.courseKey === courseKey) || null
 }
 
 export const getEffectiveLeaderboard = (remoteBoard) => {
   if (Array.isArray(remoteBoard) && remoteBoard.length) return remoteBoard
+  if (!isLocalFallbackEnabled) return []
 
   const users = getLocalUsers()
     .map(({ password, ...user }) => user)

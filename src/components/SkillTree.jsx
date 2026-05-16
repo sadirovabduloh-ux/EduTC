@@ -26,7 +26,7 @@ const SkillTree = ({ direction, lessons, onBack }) => {
     localStorage.setItem(`it-progress-${direction}`, JSON.stringify(data))
   }
 
-  const { updateScore } = useAuth()
+  const { updateScore, recordLessonProgress } = useAuth()
 
   const handleLessonComplete = async (lessonId) => {
     const newCompleted = new Set(completedLessons)
@@ -39,6 +39,7 @@ const SkillTree = ({ direction, lessons, onBack }) => {
 
     setCurrentLesson(null)
 
+    recordLessonProgress(direction, lessonId)
     await updateScore('lesson').catch(() => {})
   }
 
